@@ -1,0 +1,11 @@
+# Generic modules to activate from Simulator
+UsbPort = UsbPort
+kbd = Keyboard("123A456B789C*0#D",4,4,0)
+
+# --------------------------------------
+# KeyBoard Reader
+# --------------------------------------
+1 -> kbd.oe
+kbd.K[0-3] -> UsbPort.I[0-3]
+kbd.val -> UsbPort.I4
+UsbPort.O7 -> kbd.ack

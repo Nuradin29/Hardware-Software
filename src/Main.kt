@@ -1,15 +1,14 @@
-import isel.leic.UsbPort
-
-/*fun main(args : Array<String>)  {
-    while (true) {
-        val value = UsbPort.read()
-        UsbPort.write(value)
-    }
-}
- */
 fun main() {
+    HAL.init()
+    KBD.init()
+
+    println("Tuş dinleniyor...")
+
     while (true) {
-        val value = UsbPort.read() and 0b00001111
-        UsbPort.write(value)
+        val key = KBD.getKey()
+        if (key != KBD.NONE) {
+            println("pressed key: $key")
+        }
+        Thread.sleep(100) // CPU'yu yormamak için bekleme
     }
 }

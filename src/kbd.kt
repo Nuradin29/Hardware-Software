@@ -8,38 +8,36 @@ object KBD {
         charArrayOf('*', '0', '#', 'D')
     )
 
-    private val rowMasks = intArrayOf(0x01, 0x02, 0x04, 0x08)
-    private val colMasks = intArrayOf(0x10, 0x20, 0x40, 0x80)
+    private val rowMasks = intArrayOf(0x01, 0x02, 0x04, 0x08) // R0-R3 = 0000 1111
+    private val colMasks = intArrayOf(0x10, 0x20, 0x40, 0x80) // C0-C3 = 1111 0000
+
     private var lastKeyPressed: Char = NONE
 
     fun init() {
-        HAL.writeBits(0x0F, 0x0F) // set all row lines to 1
+        // Row pinlerini HIGH yap (girişe çekiyoruz)
+        HAL.writeBits(0x0F, 0x0F)
     }
 
     fun getKey(): Char {
         for (row in 0..3) {
-            HAL.clearBits(rowMasks[row])
+            HAL.clearBits(rowMasks[row]) // Satırı 0 yaparak aktif ediyoruz
             for (col in 0..3) {
-                if (!HAL.isBit(colMasks[col])) {
+                if (!HAL.isBit(colMasks[col])) { // Sütun 0 olduysa, tuş basıldı
                     val key = keyMap[row][col]
-                    HAL.setBits(rowMasks[row])
+                    HAL.setBits(rowMasks[row]) // Satırı eski haline getir
 
                     if (key != lastKeyPressed) {
                         lastKeyPressed = key
+                        waitKeyRelease()
                         return key
-                    } else {
-                        return NONE
                     }
+                    return NONE
                 }
             }
             HAL.setBits(rowMasks[row])
         }
 
-        // Hiçbir tuşa basılmamışsa lastKeyPressed sıfırla
-        if (lastKeyPressed != NONE) {
-            lastKeyPressed = NONE
-        }
-
+        lastKeyPressed = NONE
         return NONE
     }
 
@@ -50,5 +48,20 @@ object KBD {
             if (key != NONE) return key
         }
         return NONE
+    }
+
+    private fun waitKeyRelease() {
+        while (true) {
+            var keyStillPressed = false
+            for (row in 0..3) {
+                HAL.clearBits(rowMasks[row])
+                for (col in 0..3) {
+                    if (!HAL.isBit(colMasks[col])) keyStillPressed = true
+                }
+                HAL.setBits(rowMasks[row])
+            }
+            if (!keyStillPressed) break
+            Thread.sleep(10)
+        }
     }
 }

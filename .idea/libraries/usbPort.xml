@@ -4,6 +4,9 @@
       <root url="jar://$PROJECT_DIR$/usbPort.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/usbPort.jar!/" />
+      <root url="jar://$PROJECT_DIR$/usbPort.jar!/" />
+    </SOURCES>
   </library>
 </component>

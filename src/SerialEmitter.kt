@@ -3,41 +3,36 @@ object SerialEmitter {
 
     private fun getSSMask(dest: Destination): Int =
         when (dest) {
-            Destination.LCD -> Masks.O0        // LCD için Chip Select pini
-            Destination.ROULETTE -> Masks.O1   // Rulet için Chip Select pini
+            Destination.LCD -> Masks.O0
+            Destination.ROULETTE -> Masks.O1
         }
-
     fun init() {
-        // CS, Clock ve Data pinlerini başlangıçta sıfırla
         HAL.clrBits(Masks.O0 or Masks.O1 or Masks.O3 or Masks.O4)
+        println("[SerialEmitter] Initialized")
     }
+
+
     fun send(addr: Destination, data: Int, size: Int) {
         val ss = getSSMask(addr)
-        println("CS set")
-        HAL.setBits(ss)  // CS aktif
+        println("[SerialEmitter] CS set for $addr")
+        HAL.setBits(ss)
         for (i in size - 1 downTo 0) {
             val bit = (data shr i) and 1
-            println("Sending bit $i = $bit")
+            println("[SerialEmitter] Sending bit $i = $bit")
             if (bit == 1) HAL.setBits(Masks.O3) else HAL.clrBits(Masks.O3)
             HAL.setBits(Masks.O4)
             Thread.sleep(5)
             HAL.clrBits(Masks.O4)
             Thread.sleep(5)
         }
-
-        HAL.clrBits(ss)  // CS pasif
-        println("CS cleared")
+        HAL.clrBits(ss)
+        println("[SerialEmitter] CS cleared for $addr")
     }
 
     fun pulseEnable() {
-        HAL.setBits(Masks.O7)   // Enable HIGH
+        HAL.setBits(Masks.O7)
         Thread.sleep(10)
-        HAL.clrBits(Masks.O7)   // Enable LOW
+        HAL.clrBits(Masks.O7)
         Thread.sleep(10)
     }
-
-
 }
-
-
-

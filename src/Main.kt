@@ -6,9 +6,9 @@ fun main() {
 
     LCD.clear()
     LCD.cursor(0, 0)
-    LCD.write("Roulette Game")
+    LCD.writeString("Roulette Game")
     LCD.cursor(1, 0)
-    LCD.write("1 2 3 $0")
+    LCD.writeString("1 2 3 $0")
 
     while (true) {
         // Klavye dinle

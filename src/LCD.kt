@@ -1,74 +1,84 @@
-import SerialEmitter.pulseEnable
-
 object LCD {
     private const val LINES = 2
     private const val COLS = 16
-    private const val SERIAL_INTERFACE = true  // Simülasyonda seri iletişim kullanılıyor
+    private const val SERIAL_INTERFACE = true
+
+    private fun log(msg: String) = println("[LCD] $msg")
 
     private fun writeNibbleSerial(rs: Boolean, data: Int) {
         val valToSend = (if (rs) 0x10 else 0) or (data and 0xF)
+        log("writeNibbleSerial(rs=$rs, data=0x${data.toString(16)}) valToSend=0x${valToSend.toString(16)}")
         SerialEmitter.send(SerialEmitter.Destination.LCD, valToSend, 5)
         SerialEmitter.pulseEnable()
-    }
-
-
-
-
-    // Paralel 4 bit yazma (simülasyonda paralel kullanılmıyorsa devre dışı bırakabilirsin)
-    private fun writeNibbleParallel(rs: Boolean, data: Int) {
-        // Önce ilgili pinleri temizle
-        HAL.clrBits(Masks.O0 or Masks.O1 or Masks.O2 or Masks.O3 or Masks.O4 or Masks.O7)
-
-        if ((data and 0x1) != 0) HAL.setBits(Masks.O1)
-        if ((data and 0x2) != 0) HAL.setBits(Masks.O2)
-        if ((data and 0x4) != 0) HAL.setBits(Masks.O3)
-        if ((data and 0x8) != 0) HAL.setBits(Masks.O4)
-
-        // RS pinini ayarla
-        if (rs) HAL.setBits(Masks.O0) else HAL.clrBits(Masks.O0)
-
-        // Enable pini için pulse üret
-        HAL.setBits(Masks.O7)
-        Thread.sleep(5)
-        HAL.clrBits(Masks.O7)
-        Thread.sleep(5)
+        Thread.sleep(2) // küçük bekleme
     }
 
     private fun writeNibble(rs: Boolean, data: Int) {
         if (SERIAL_INTERFACE) {
             writeNibbleSerial(rs, data)
         } else {
-            writeNibbleParallel(rs, data)
+            // Paralel arayüz varsa buraya implementasyon eklenebilir
+            throw UnsupportedOperationException("Parallel interface not implemented")
         }
     }
 
-    // 8-bit komut ya da veri için iki 4-bit nibble gönderimi
     private fun writeByte(rs: Boolean, data: Int) {
-        writeNibble(rs, (data shr 4) and 0xF)  // Üst nibble
-        writeNibble(rs, data and 0xF)          // Alt nibble
+        log("writeByte(rs=$rs, data=0x${data.toString(16)})")
+        writeNibble(rs, (data shr 4) and 0xF)
+        writeNibble(rs, data and 0xF)
+        Thread.sleep(2)
     }
 
-    private fun writeCMD(data: Int) = writeByte(false, data)
-    private fun writeDATA(data: Int) = writeByte(true, data)
+    private fun writeCMD(cmd: Int) {
+        log("writeCMD(0x${cmd.toString(16)})")
+        writeByte(false, cmd)
+        Thread.sleep(5)
+    }
+
+    private fun writeDATA(data: Int) {
+        log("writeDATA(0x${data.toString(16)})")
+        writeByte(true, data)
+        Thread.sleep(2)
+    }
 
     fun init() {
-        // LCD başlangıç komutları
-        writeCMD(0x28) // 4-bit, 2 satır, 5x8 font
-        writeCMD(0x0C) // Display ON, Cursor OFF
-        writeCMD(0x06) // Entry mode set (cursor sağa kayar)
+        log("LCD init started")
+        Thread.sleep(50)
+        // Başlangıç komutları, 4-bit mod ayarı vs.
+        writeCMD(0x30)
+        Thread.sleep(5)
+        writeCMD(0x30)
+        Thread.sleep(5)
+        writeCMD(0x30)
+        Thread.sleep(5)
+        writeCMD(0x20)  // 4-bit mode
+        Thread.sleep(5)
+        writeCMD(0x28)  // 2 satır, 5x8 matrix
+        writeCMD(0x0C)  // Display ON, cursor OFF, blink OFF
+        writeCMD(0x06)  // Cursor artışı sağa
         clear()
+        log("LCD init finished")
     }
 
     fun clear() {
-        writeCMD(0x01) // Ekranı temizle
+        log("clear display")
+        writeCMD(0x01)  // Ekranı temizle
         Thread.sleep(100)
     }
 
-    fun write(c: Char) = writeDATA(c.code)
-    fun write(text: String) = text.forEach { write(it) }
+    fun writeChar(c: Char) {
+        log("write char '$c'")
+        writeDATA(c.code)
+    }
+
+    fun writeString(text: String) {
+        log("write string \"$text\"")
+        text.forEach { writeChar(it) }
+    }
 
     fun cursor(line: Int, column: Int) {
         val addr = if (line == 0) column else 0x40 + column
+        log("set cursor line=$line, column=$column (addr=0x${addr.toString(16)})")
         writeCMD(0x80 or addr)
     }
 }

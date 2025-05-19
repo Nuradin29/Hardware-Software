@@ -11,7 +11,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
-    <orderEntry type="library" name="usbPort" level="project" />
     <orderEntry type="library" name="rouletteGame" level="project" />
   </component>
 </module>

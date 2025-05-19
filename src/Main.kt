@@ -1,18 +1,29 @@
 fun main() {
     HAL.init()
-    KBD.init()
     LCD.init()
-    SerialEmitter.init()
     RouletteDisplay.init()
+    SerialEmitter.init()
 
-    // LCD testi
-    SerialEmitter.send(SerialEmitter.Destination.LCD, 1234, 4)
-    Thread.sleep(500)
+    LCD.clear()
+    LCD.cursor(0, 0)
+    LCD.write("Roulette Game")
+    LCD.cursor(1, 0)
+    LCD.write("1 2 3 $0")
 
-    // 7-segment testi
-    SerialEmitter.send(SerialEmitter.Destination.ROULETTE, 987654, 6)
-    Thread.sleep(500)
-    SerialEmitter.send(SerialEmitter.Destination.ROULETTE, 42, 6)
-    Thread.sleep(500)
-    SerialEmitter.send(SerialEmitter.Destination.ROULETTE, 1234567, 6)
+    while (true) {
+        // Klavye dinle
+        if (KBD.dataAvailable()) {
+            val key = KBD.getKey()
+            println("Tuş: $key")
+            KBD.ack()
+        }
+        // Jeton kontrolü
+        if (Acceptor.isCoinInserted()) {
+            println("Jeton algılandı!")
+            Acceptor.acceptCoin()
+            Thread.sleep(100)
+            Acceptor.stopAccepting()
+        }
+        Thread.sleep(10)
+    }
 }

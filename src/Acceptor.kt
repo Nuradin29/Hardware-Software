@@ -1,6 +1,10 @@
 object Acceptor {
     fun isCoinInserted() = HAL.isBit(Masks.I6)
-    fun coinID() = if (HAL.isBit(Masks.I5)) 1 else 0
+    fun coinID(): Int {
+        // Önce coin ID pininin durumunu kontrol et
+        return if (HAL.isBit(Masks.I5)) 1 else 0
+    }
+
 
     fun acceptCoin() {
         HAL.setBits(Masks.O6)

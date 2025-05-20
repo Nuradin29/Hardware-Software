@@ -15,6 +15,7 @@ object Masks {
     const val O2 = 0x04
     const val O3 = 0x08
     const val O4 = 0x10
+    const val O5 = 0x20
     const val O6 = 0x40
     const val O7 = 0x80
 }

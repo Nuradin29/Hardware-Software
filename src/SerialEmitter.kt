@@ -1,38 +1,49 @@
 object SerialEmitter {
-    enum class Destination { LCD, ROULETTE }
+    enum class Destination {
+        LCD, ROULETTE
+    }
 
-    private fun getSSMask(dest: Destination): Int =
-        when (dest) {
+    fun init() {
+        HAL.setBits(Masks.O0 or Masks.O1) // CS HIGH
+        HAL.clrBits(Masks.O3 or Masks.O4) // SDX ve SCLK LOW
+    }
+
+    fun send(addr: Destination, data: Int, size: Int) {
+        val dest = when (addr) {
             Destination.LCD -> Masks.O0
             Destination.ROULETTE -> Masks.O1
         }
-    fun init() {
-        HAL.clrBits(Masks.O0 or Masks.O1 or Masks.O3 or Masks.O4)
-        println("[SerialEmitter] Initialized")
-    }
 
+        // CS LOW (başlat)
+        HAL.clrBits(dest)
+        HAL.clrBits(Masks.O4)
 
-    fun send(addr: Destination, data: Int, size: Int) {
-        val ss = getSSMask(addr)
-        println("[SerialEmitter] CS set for $addr")
-        HAL.setBits(ss)
-        for (i in size - 1 downTo 0) {
+        var oneCount = 0
+
+        for (i in 0 until size) {
             val bit = (data shr i) and 1
-            println("[SerialEmitter] Sending bit $i = $bit")
-            if (bit == 1) HAL.setBits(Masks.O3) else HAL.clrBits(Masks.O3)
-            HAL.setBits(Masks.O4)
-            Thread.sleep(5)
-            HAL.clrBits(Masks.O4)
-            Thread.sleep(5)
-        }
-        HAL.clrBits(ss)
-        println("[SerialEmitter] CS cleared for $addr")
-    }
+            if (bit == 1) {
+                HAL.setBits(Masks.O3)
+                oneCount++
+            } else {
+                HAL.clrBits(Masks.O3)
+            }
 
-    fun pulseEnable() {
-        HAL.setBits(Masks.O7)
-        Thread.sleep(10)
-        HAL.clrBits(Masks.O7)
-        Thread.sleep(10)
+            HAL.setBits(Masks.O4)
+            Thread.sleep(1)
+            HAL.clrBits(Masks.O4)
+            Thread.sleep(1)
+        }
+
+        // ⬅️ ODD parity hesaplama (toplam 1 sayısı tek olmalı)
+        val parityBit = if (oneCount % 2 == 0) 1 else 0
+
+        if (parityBit == 1) HAL.setBits(Masks.O3) else HAL.clrBits(Masks.O3)
+        HAL.setBits(Masks.O4)
+        Thread.sleep(1)
+        HAL.clrBits(Masks.O4)
+        Thread.sleep(1)
+
+        HAL.setBits(dest) // CS HIGH (bitir)
     }
 }

@@ -41,3 +41,43 @@ object KBD {
         HAL.clrBits(Masks.O7)
     }
 }
+fun main() {
+    HAL.init()
+    KBD.init()
+
+
+    var credit = 0
+    var coinPreviouslyInserted = false
+
+    while (true) {
+        // Klavye tuşlarını dinle
+        if (KBD.dataAvailable()) {
+            val key = KBD.getKey()
+            println("Tuş: $key")
+            KBD.ack()
+        }
+
+        // Coin kontrolü (eski çalışan kod)
+        if (Acceptor.isCoinInserted()) {
+            if (!coinPreviouslyInserted) {
+                val coinId = Acceptor.coinID()
+                if (coinId == 1) {
+                    Acceptor.acceptCoin()
+                    val creditToAdd = 2
+                    credit += creditToAdd
+                    println("Kredi eklendi: $creditToAdd, Toplam kredi: $credit")
+                } else {
+                    println("Coin ID aktif değil, kredi eklenmedi.")
+                }
+                coinPreviouslyInserted = true
+            }
+        } else {
+            if (coinPreviouslyInserted) {
+                Acceptor.stopAccepting()
+            }
+            coinPreviouslyInserted = false
+        }
+
+        Thread.sleep(10)
+    }
+}

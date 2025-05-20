@@ -25,4 +25,5 @@ object RouletteDisplay {
             SerialEmitter.send(SerialEmitter.Destination.ROULETTE, 0, 8)
         }
     }
+
 }

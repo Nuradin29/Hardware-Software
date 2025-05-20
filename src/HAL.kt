@@ -2,7 +2,7 @@ import isel.leic.UsbPort
 
 object HAL {
     private var initialized = false
-    private var portValue = 0  // Yazılan değeri hafızada tut
+    var portValue = 0  // Yazılan değeri hafızada tut
 
     fun init() {
         if (!initialized) {
@@ -26,11 +26,16 @@ object HAL {
         init()
         portValue = portValue or mask
         UsbPort.write(portValue)
+
     }
 
     fun clrBits(mask: Int) {
         init()
         portValue = portValue and mask.inv()
         UsbPort.write(portValue)
+
     }
+
+
+
 }

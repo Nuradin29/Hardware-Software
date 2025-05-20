@@ -27,3 +27,25 @@ object RouletteDisplay {
     }
 
 }
+fun main() {
+    HAL.init()
+    SerialEmitter.init()
+    LCD.init()
+    LCD.cursor(0, 0)
+    LCD.writeString("Roulette Game")
+    LCD.cursor(1, 0)
+    LCD.writeString("1 2 3 $0")
+    RouletteDisplay.init()      // Başlangıç: 0 göster ve aç
+
+    println("Gösterge test başlıyor...")
+
+    for (i in 1..10) {
+        val valGoster = (0..31).random()  // 5-bit değer gönder
+        println("Gösterilen: $valGoster")
+        RouletteDisplay.setValue(valGoster)
+        Thread.sleep(500)  // Gözle görülür değişim için bekle
+    }
+
+    println("Göstergeden çıkılıyor, kapatılıyor...")
+    RouletteDisplay.off(true)   // Göstergeyi kapat (veriyi 0 gönder)
+}

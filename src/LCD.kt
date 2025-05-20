@@ -13,7 +13,6 @@ object LCD {
 
     private fun writeNibbleSerial(rs: Boolean, data: Int) {
         val valToSend = (data and 0x0F) shl 1 or if (rs) 1 else 0
-        println("Gönderilen nibble: ${valToSend.toString(2).padStart(5, '0')}")
 
         SerialEmitter.send(SerialEmitter.Destination.LCD, valToSend, 5)
         Thread.sleep(2)

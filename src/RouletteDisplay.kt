@@ -1,51 +1,83 @@
 object RouletteDisplay {
-    // Başlatıcı fonksiyon: Göstergenin başlangıç durumunu ayarlar
+    private val segmentSequence = listOf(
+        0b01000, // d
+        0b00010, // b
+        0b00100, // c
+        0b00001, // a
+        0b10000, // e
+        0b00011, // f (örnek: a + b gibi görünür)
+        0b01000  // tekrar d
+    )
+
     fun init() {
-        setValue(0)      // Göstergede 0'ı göster
-        off(false)       // Göstergede görüntüyü aç
+        // Tüm display'lere 0 gönder (kapalı hale getir)
+        for (i in 0..5) writeToDisplay(i, 0)
     }
 
-    // Rastgele sayı animasyonu (örneğin dönerken hızlıca değişen değerler gibi)
+    fun setValue(segmentBits: Int) {
+        for (i in 0..5) {
+            writeToDisplay(i, segmentBits)
+        }
+    }
+
+    private fun writeToDisplay(display: Int, segmentBits: Int) {
+        val cmd = display and 0b111
+        val data = segmentBits and 0b11111
+        val payload = (cmd shl 5) or data
+        SerialEmitter.send(SerialEmitter.Destination.ROULETTE, payload, 8)
+    }
+
     fun animation() {
-        for (i in 1..20) {
-            setValue((0..16).random()) // 1-16 arası rastgele bir değer ata
-            Thread.sleep(50)           // Biraz bekle
+        repeat(3) { // 3 tam döngü yap
+            for (pattern in segmentSequence) {
+                for (i in 0..5) {
+                    writeToDisplay(i, pattern)
+                }
+                Thread.sleep(150)
+            }
         }
     }
 
-
-    // Göstergeye yeni değer gönderir
-    fun setValue(value: Int) {
-        SerialEmitter.send(SerialEmitter.Destination.ROULETTE, value, 8)
-    }
-
-    // Göstergeyi kapatır/açar
-    fun off(value: Boolean) {
-        if (value) {
-            SerialEmitter.send(SerialEmitter.Destination.ROULETTE, 0, 8)
+    fun off(clear: Boolean) {
+        if (clear) {
+            for (i in 0..5) {
+                writeToDisplay(i, 0)
+            }
         }
     }
 
+    fun showResult(value: Int) {
+        val shown = when (value) {
+            in 0..9 -> value  // sayılar
+            10 -> 0b00001     // 'A'
+            11 -> 0b00010     // 'B'
+            12 -> 0b00100     // 'C'
+            13 -> 0b01000     // 'D'
+            else -> 0
+        }
+        setValue(shown)
+    }
 }
+
 fun main() {
+    println("🎰 Roulette Başlatılıyor...")
+
     HAL.init()
     SerialEmitter.init()
     LCD.init()
+
     LCD.cursor(0, 0)
     LCD.writeString("Roulette Game")
-    LCD.cursor(1, 0)
-    LCD.writeString("1 2 3 $0")
-    RouletteDisplay.init()      // Başlangıç: 0 göster ve aç
 
-    println("Gösterge test başlıyor...")
+    // Başlangıç: tüm display'leri sıfırla
+    RouletteDisplay.init()
 
-    for (i in 1..10) {
-        val valGoster = (0..31).random()  // 5-bit değer gönder
-        println("Gösterilen: $valGoster")
-        RouletteDisplay.setValue(valGoster)
-        Thread.sleep(500)  // Gözle görülür değişim için bekle
-    }
+    // Animasyon: d → b → c → a → e → f → d
+    println("▶️ Animasyon Başlıyor...")
+    RouletteDisplay.animation()
 
-    println("Göstergeden çıkılıyor, kapatılıyor...")
-    RouletteDisplay.off(true)   // Göstergeyi kapat (veriyi 0 gönder)
+    // Sonuç belirle
+    val result = (0..13).random()
+    println("🎯 Sonuç: $result")
+    RouletteDisplay.showResult(result)
 }

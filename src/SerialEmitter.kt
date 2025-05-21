@@ -14,13 +14,19 @@ object SerialEmitter {
             Destination.ROULETTE -> Masks.O1
         }
 
-        // CS LOW (başlat)
+        val bitRange = when (addr) {
+            Destination.LCD -> 0 until size
+            Destination.ROULETTE -> size - 1 downTo 0
+        }
+
+        println("[SEND] to $addr | data = 0b${data.toString(2).padStart(8, '0')}")
+
+        // CS LOW
         HAL.clrBits(dest)
         HAL.clrBits(Masks.O4)
 
         var oneCount = 0
-
-        for (i in 0 until size) {
+        for (i in bitRange) {
             val bit = (data shr i) and 1
             if (bit == 1) {
                 HAL.setBits(Masks.O3)
@@ -35,15 +41,23 @@ object SerialEmitter {
             Thread.sleep(1)
         }
 
-        // ⬅️ ODD parity hesaplama (toplam 1 sayısı tek olmalı)
+        // Parity
         val parityBit = if (oneCount % 2 == 0) 1 else 0
-
         if (parityBit == 1) HAL.setBits(Masks.O3) else HAL.clrBits(Masks.O3)
         HAL.setBits(Masks.O4)
         Thread.sleep(1)
         HAL.clrBits(Masks.O4)
         Thread.sleep(1)
 
-        HAL.setBits(dest) // CS HIGH (bitir)
+        // CS HIGH
+        HAL.setBits(dest)
+    }
+
+
+    fun pulseEnable() {
+        HAL.setBits(Masks.O7)
+        Thread.sleep(1)
+        HAL.clrBits(Masks.O7)
+        Thread.sleep(1)
     }
 }

@@ -68,6 +68,7 @@ fun main() {
                     println("Kredi eklendi: $creditToAdd, Toplam kredi: $credit")
                 } else {
                     println("Coin ID aktif değil, kredi eklenmedi.")
+
                 }
                 coinPreviouslyInserted = true
             }

@@ -11,7 +11,7 @@ object RouletteGameTUI {
         updateCreditDisplay()
 
         while (true) {
-            println("\nJeton eklemek için 'c', bahis yapmak için '*', oyunu başlatmak için '#' girin.")
+            println("\nEnter 'c' to insert coin, '*' to place a bet, '#' to start the game.")
             val input = scanner.nextLine()
 
             when (input) {
@@ -25,48 +25,48 @@ object RouletteGameTUI {
                     if (bets.isNotEmpty()) {
                         playGame()
                     } else {
-                        println("Henüz bahis yapılmadı!")
+                        println("No bets placed yet!")
                     }
                 }
-                else -> println("Geçersiz giriş!")
+                else -> println("Invalid input!")
             }
         }
     }
 
     fun insertCoin() {
         credit += 2
-        println("Jeton eklendi. Mevcut kredi: $$credit")
+        println("Coin inserted. Current credit: $$credit")
     }
 
     fun updateCreditDisplay() {
-        println("Toplam kredi: $$credit")
+        println("Total credit: $$credit")
     }
 
     fun handleBet(scanner: Scanner) {
-        print("Bahis yapılacak sayıyı girin (1-16): ")
+        print("Enter the number you want to bet on (0–16): ")
         val number = scanner.nextLine().toIntOrNull()
         if (number == null || number !in 0..16) {
-            println("Geçersiz sayı!")
+            println("Invalid number!")
             return
         }
 
-        print("$number sayısına kaç dolar bahis koyacaksınız (max 9): ")
+        print("How much do you want to bet on number $number? (max $maxBetPerNumber): ")
         val amount = scanner.nextLine().toIntOrNull()
         if (amount == null || amount !in 1..maxBetPerNumber || amount > credit) {
-            println("Geçersiz miktar veya yetersiz kredi!")
+            println("Invalid amount or insufficient credit!")
             return
         }
 
         bets[number] = bets.getOrDefault(number, 0) + amount
         credit -= amount
-        println("$number sayısına $amount dolar bahis yapıldı. Kalan kredi: $$credit")
+        println("Placed a $amount dollar bet on $number. Remaining credit: $$credit")
     }
 
     fun playGame() {
-        println("\nÇark dönüyor...")
+        println("\nSpinning the wheel...")
         Thread.sleep(1000)
         val result = (0..16).random()
-        println("Sonuç: $result")
+        println("Result: $result")
 
         var totalWin = 0
         bets.forEach { (num, betAmt) ->
@@ -79,9 +79,9 @@ object RouletteGameTUI {
         updateCreditDisplay()
 
         if (totalWin > 0) {
-            println("Tebrikler, $totalWin dolar kazandınız!")
+            println("Congratulations! You won $$totalWin!")
         } else {
-            println("Maalesef, kaybettiniz.")
+            println("Unfortunately, you lost.")
         }
 
         bets.clear()

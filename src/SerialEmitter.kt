@@ -54,10 +54,5 @@ object SerialEmitter {
     }
 
 
-    fun pulseEnable() {
-        HAL.setBits(Masks.O7)
-        Thread.sleep(1)
-        HAL.clrBits(Masks.O7)
-        Thread.sleep(1)
-    }
+
 }

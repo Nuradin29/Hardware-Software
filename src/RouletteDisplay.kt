@@ -20,7 +20,7 @@ object RouletteDisplay {
         }
     }
 
-    private fun writeToDisplay(display: Int, segmentBits: Int) {
+    fun writeToDisplay(display: Int, segmentBits: Int) {
         val cmd = display and 0b111
         val data = segmentBits and 0b11111
         val payload = (cmd shl 5) or data
@@ -28,15 +28,19 @@ object RouletteDisplay {
     }
 
     fun animation() {
-        repeat(3) { // 3 tam döngü yap
+        repeat(2) {
             for (pattern in segmentSequence) {
                 for (i in 0..5) {
-                    writeToDisplay(i, pattern)
+                    for (j in 0..5) {
+                        val seg = if (j == i) pattern else 0
+                        writeToDisplay(j, seg)
+                    }
+                    Thread.sleep(100)
                 }
-                Thread.sleep(150)
             }
         }
     }
+
 
     fun off(clear: Boolean) {
         if (clear) {
@@ -57,27 +61,22 @@ object RouletteDisplay {
         }
         setValue(shown)
     }
+
+
 }
 
 fun main() {
-    println("🎰 Roulette Başlatılıyor...")
-
     HAL.init()
     SerialEmitter.init()
     LCD.init()
-
+    LCD.clear()
     LCD.cursor(0, 0)
-    LCD.writeString("Roulette Game")
+    LCD.writeString("Testing displays")
 
-    // Başlangıç: tüm display'leri sıfırla
-    RouletteDisplay.init()
-
-    // Animasyon: d → b → c → a → e → f → d
-    println("▶️ Animasyon Başlıyor...")
-    RouletteDisplay.animation()
-
-    // Sonuç belirle
-    val result = (0..13).random()
-    println("🎯 Sonuç: $result")
-    RouletteDisplay.showResult(result)
+    for (cmd in 0..7) {
+        val payload = (cmd shl 5) or 0b11111 // tüm segmentleri yak
+        println("Testing cmd=$cmd")
+        SerialEmitter.send(SerialEmitter.Destination.ROULETTE, payload, 8)
+        Thread.sleep(500)
+    }
 }

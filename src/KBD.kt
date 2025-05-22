@@ -65,9 +65,9 @@ fun main() {
                     Acceptor.acceptCoin()
                     val creditToAdd = 2
                     credit += creditToAdd
-                    println("Kredi eklendi: $creditToAdd, Toplam kredi: $credit")
+                    println("Credit Added: $creditToAdd, Total Credit: $credit")
                 } else {
-                    println("Coin ID aktif değil, kredi eklenmedi.")
+                    println("Coin ID ıs not actıve, credıkt can not added.")
 
                 }
                 coinPreviouslyInserted = true

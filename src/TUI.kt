@@ -43,9 +43,9 @@ object RouletteGameTUI {
     }
 
     fun handleBet(scanner: Scanner) {
-        print("Enter the number you want to bet on (0–16): ")
+        print("Enter the number you want to bet on (0–13): ")
         val number = scanner.nextLine().toIntOrNull()
-        if (number == null || number !in 0..16) {
+        if (number == null || number !in 0..13) {
             println("Invalid number!")
             return
         }
@@ -65,7 +65,7 @@ object RouletteGameTUI {
     fun playGame() {
         println("\nSpinning the wheel...")
         Thread.sleep(1000)
-        val result = (0..16).random()
+        val result = (0..13).random()
         println("Result: $result")
 
         var totalWin = 0

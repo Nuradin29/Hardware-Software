@@ -5,7 +5,7 @@ object RouletteDisplay {
         0b00100, // c
         0b00001, // a
         0b10000, // e
-        0b00011, // f (örnek: a + b gibi görünür)
+        0b00011, // f
         0b01000  // tekrar d
     )
 

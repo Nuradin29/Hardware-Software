@@ -12,11 +12,20 @@ object Acceptor {
         return if (HAL.isBit(Masks.I5)) 1 else 0
     }
 
-    fun acceptCoin() {
-        HAL.setBits(Masks.O6)
+    fun acceptCoin(): Boolean {
+        return if (coinID() == 1) {
+            HAL.setBits(Masks.O6)
+            true
+        } else {
+            false
+        }
     }
 
     fun stopAccepting() {
         HAL.clrBits(Masks.O6)
+    }
+
+    fun resetState() {
+        previousState = false
     }
 }

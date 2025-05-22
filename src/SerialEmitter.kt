@@ -19,7 +19,7 @@ object SerialEmitter {
             Destination.ROULETTE -> size - 1 downTo 0
         }
 
-        println("[SEND] to $addr | data = 0b${data.toString(2).padStart(8, '0')}")
+
 
         // CS LOW
         HAL.clrBits(dest)

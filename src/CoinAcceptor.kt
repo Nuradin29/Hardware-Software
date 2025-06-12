@@ -1,4 +1,4 @@
-object Acceptor {
+object CoinAcceptor {
     private var previousState = false
 
     fun isCoinInserted(): Boolean {
@@ -25,7 +25,5 @@ object Acceptor {
         HAL.clrBits(Masks.O6)
     }
 
-    fun resetState() {
-        previousState = false
-    }
+
 }

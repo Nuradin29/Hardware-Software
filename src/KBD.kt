@@ -58,11 +58,11 @@ fun main() {
         }
 
         // Coin kontrolü (eski çalışan kod)
-        if (Acceptor.isCoinInserted()) {
+        if (CoinAcceptor.isCoinInserted()) {
             if (!coinPreviouslyInserted) {
-                val coinId = Acceptor.coinID()
+                val coinId = CoinAcceptor.coinID()
                 if (coinId == 1) {
-                    Acceptor.acceptCoin()
+                    CoinAcceptor.acceptCoin()
                     val creditToAdd = 2
                     credit += creditToAdd
                     println("Credit Added: $creditToAdd, Total Credit: $credit")
@@ -74,7 +74,7 @@ fun main() {
             }
         } else {
             if (coinPreviouslyInserted) {
-                Acceptor.stopAccepting()
+                CoinAcceptor.stopAccepting()
             }
             coinPreviouslyInserted = false
         }

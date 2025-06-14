@@ -1,4 +1,21 @@
 object RouletteDisplay {
+    private val segmentMap = mapOf(
+        '0' to 0b11110,
+        '1' to 0b00110,
+        '2' to 0b11011,
+        '3' to 0b11101,
+        '4' to 0b01101,
+        '5' to 0b10111,
+        '6' to 0b10111,
+        '7' to 0b11100,
+        '8' to 0b11111,
+        '9' to 0b11101,
+        'A' to 0b11111,
+        'B' to 0b00111,
+        'C' to 0b10011,
+        'D' to 0b01111
+    )
+
     private val segmentSequence = listOf(
         0b01000, // d
         0b00010, // b
@@ -10,8 +27,21 @@ object RouletteDisplay {
     )
 
     fun init() {
-        // Tüm display'lere 0 gönder (kapalı hale getir)
         for (i in 0..5) writeToDisplay(i, 0)
+    }
+
+    fun writeToDisplay(display: Int, segmentBits: Int) {
+        val cmd = display and 0b111
+        val data = segmentBits and 0b11111
+        val payload = (data shl 3) or cmd
+        SerialEmitter.send(SerialEmitter.Destination.ROULETTE, payload, 8)
+    }
+
+    fun showChar(c: Char) {
+        val bits = segmentMap[c.uppercaseChar()] ?: 0
+        for (i in 0..5) {
+            writeToDisplay(i, bits)
+        }
     }
 
     fun setValue(segmentBits: Int) {
@@ -20,11 +50,16 @@ object RouletteDisplay {
         }
     }
 
-    fun writeToDisplay(display: Int, segmentBits: Int) {
-        val cmd = display and 0b111
-        val data = segmentBits and 0b11111
-        val payload = (cmd shl 5) or data
-        SerialEmitter.send(SerialEmitter.Destination.ROULETTE, payload, 8)
+    fun showResult(value: Int) {
+        val c = when (value) {
+            in 0..9 -> '0' + value
+            10 -> 'A'
+            11 -> 'B'
+            12 -> 'C'
+            13 -> 'D'
+            else -> ' '
+        }
+        showChar(c)
     }
 
     fun animation() {
@@ -41,42 +76,23 @@ object RouletteDisplay {
         }
     }
 
-
-    fun off(clear: Boolean) {
+    fun off(clear: Boolean = true) {
         if (clear) {
-            for (i in 0..5) {
-                writeToDisplay(i, 0)
-            }
+            for (i in 0..5) writeToDisplay(i, 0)
         }
     }
-
-    fun showResult(value: Int) {
-        val shown = when (value) {
-            in 0..9 -> value  // sayılar
-            10 -> 0b00001     // 'A'
-            11 -> 0b00010     // 'B'
-            12 -> 0b00100     // 'C'
-            13 -> 0b01000     // 'D'
-            else -> 0
-        }
-        setValue(shown)
-    }
-
-
 }
-
 fun main() {
     HAL.init()
     SerialEmitter.init()
     LCD.init()
-    LCD.clear()
-    LCD.cursor(0, 0)
-    LCD.writeString("Testing displays")
+    RouletteDisplay.init()
 
-    for (cmd in 0..7) {
-        val payload = (cmd shl 5) or 0b11111 // tüm segmentleri yak
-        println("Testing cmd=$cmd")
-        SerialEmitter.send(SerialEmitter.Destination.ROULETTE, payload, 8)
-        Thread.sleep(500)
-    }
+    val char = '8'
+    LCD.clear()
+    LCD.writeString("Testing $char")
+
+    RouletteDisplay.showChar(char)
+
+    println("Gönderildi: $char")
 }

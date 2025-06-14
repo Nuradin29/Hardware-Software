@@ -6,7 +6,7 @@ class CoinDeposit {
         val credit = 2
         balance += credit
         totalCoins += credit
-        println("$credit kredi eklendi! (Mevcut kredi: $balance)")
+
     }
 
     fun useCredit(amount: Int): Boolean {

@@ -16,10 +16,8 @@ object SerialEmitter {
 
         val bitRange = when (addr) {
             Destination.LCD -> 0 until size
-            Destination.ROULETTE -> size - 1 downTo 0
+            Destination.ROULETTE -> size - 1 downTo 0  // MSB to LSB
         }
-
-
 
         // CS LOW
         HAL.clrBits(dest)
@@ -35,13 +33,14 @@ object SerialEmitter {
                 HAL.clrBits(Masks.O3)
             }
 
+            // Clock pulse
             HAL.setBits(Masks.O4)
             Thread.sleep(1)
             HAL.clrBits(Masks.O4)
             Thread.sleep(1)
         }
 
-        // Parity
+        // Send ODD Parity bit
         val parityBit = if (oneCount % 2 == 0) 1 else 0
         if (parityBit == 1) HAL.setBits(Masks.O3) else HAL.clrBits(Masks.O3)
         HAL.setBits(Masks.O4)

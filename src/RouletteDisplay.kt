@@ -37,7 +37,7 @@ object RouletteDisplay {
                 sendUpdateDisplay()
             }
         }
-        clearAll()
+
         sendUpdateDisplay()
     }
 

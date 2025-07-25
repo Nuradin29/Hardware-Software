@@ -1,57 +1,57 @@
+import kotlin.concurrent.thread
+
 object SerialEmitter {
-    enum class Destination {
-        LCD, ROULETTE
-    }
+    enum class Destination { LCD, ROULETTE }
 
     fun init() {
-        HAL.setBits(Masks.O0 or Masks.O1) // CS HIGH
-        HAL.clrBits(Masks.O3 or Masks.O4) // SDX ve SCLK LOW
+        HAL.setBits(Masks.O0 or Masks.O1)
+        HAL.clrBits(Masks.O3 or Masks.O4)
     }
 
-    fun send(addr: Destination, data: Int, size: Int) {
+    fun send(addr: Destination, data: Int, size: Int = 8) {
         val dest = when (addr) {
             Destination.LCD -> Masks.O0
             Destination.ROULETTE -> Masks.O1
         }
 
-        val bitRange = when (addr) {
-            Destination.LCD -> 0 until size
-            Destination.ROULETTE -> size - 1 downTo 0  // MSB to LSB
-        }
-
-        // CS LOW
-        HAL.clrBits(dest)
-        HAL.clrBits(Masks.O4)
+        HAL.clrBits(dest)      // CS LOW
+        HAL.clrBits(Masks.O4)  // SCLK LOW
 
         var oneCount = 0
-        for (i in bitRange) {
+        for (i in 0 until size) {
             val bit = (data shr i) and 1
             if (bit == 1) {
-                HAL.setBits(Masks.O3)
+                HAL.setBits(Masks.O3)   // SDX = 1
                 oneCount++
             } else {
-                HAL.clrBits(Masks.O3)
+                HAL.clrBits(Masks.O3)   // SDX = 0
             }
-
-            // Clock pulse
             HAL.setBits(Masks.O4)
-            Thread.sleep(1)
+            Thread.sleep(2)
             HAL.clrBits(Masks.O4)
-            Thread.sleep(1)
+            Thread.sleep(2)
         }
 
-        // Send ODD Parity bit
-        val parityBit = if (oneCount % 2 == 0) 1 else 0
-        if (parityBit == 1) HAL.setBits(Masks.O3) else HAL.clrBits(Masks.O3)
+        val parity = if (oneCount % 2 == 0) 1 else 0
+        if (parity == 1) HAL.setBits(Masks.O3) else HAL.clrBits(Masks.O3)
         HAL.setBits(Masks.O4)
-        Thread.sleep(1)
+        Thread.sleep(2)
         HAL.clrBits(Masks.O4)
-        Thread.sleep(1)
+        Thread.sleep(2)
 
-        // CS HIGH
-        HAL.setBits(dest)
+        HAL.setBits(dest) // CS HIGH
     }
 
-
-
 }
+fun main() {
+    HAL.init()
+    SerialEmitter.init()
+    val data = 0b11111
+    val cmd = 0b000
+    val payload = ((data and 0b11111) shl 3) or (cmd and 0b111)
+
+    SerialEmitter.send(SerialEmitter.Destination.ROULETTE, payload, 8)
+
+    println("Payload (data-cmd): 0b${payload.toString(2).padStart(8,'0')} = 0x${payload.toString(16)} gönderildi.")
+}
+

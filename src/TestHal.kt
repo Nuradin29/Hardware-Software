@@ -1,4 +1,3 @@
-import isel.leic.UsbPort
 
 fun testHAL() {
     println("HAL testi başlıyor...")

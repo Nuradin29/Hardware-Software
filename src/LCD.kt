@@ -1,67 +1,66 @@
 object LCD {
-    private const val SERIAL_INTERFACE = true
+    // LCD Command Constants
+    private const val CLEAR_DISPLAY = 0x01
+    private const val SET_4_BIT_MODE = 0x02
+    private const val DISPLAY_ON_CURSOR_ON = 0x0F
+    private const val LINE_FONT_5X8 = 0x28
+    private const val ENTRY_MODE = 0x06
 
-    private const val ENTRY_MODE_SET = 0x06
-    private const val SET_8_BITS_2_LINES = 0x03
-    private const val SET_4_BITS_2_LINES = 0x02
-    private const val DISPLAY_CLEAR = 0x01
-    private const val DISPLAY_OFF = 0x08
-    private const val DISPLAY_ON = 0x0F
-    private const val LINE_FONT = 0x28
-    private const val ON = 0x01
-    private const val OFF = 0x00
-
-    private fun writeNibbleSerial(rs: Boolean, data: Int) {
-        val valToSend = (data and 0x0F) shl 1 or if (rs) 1 else 0
-
-        SerialEmitter.send(SerialEmitter.Destination.LCD, valToSend, 5)
+    // Send data to LCD via SerialEmitter
+    private fun sendToLCD(isData: Boolean, value: Int) {
+        val packet = (value and 0x0F) shl 1 or if (isData) 1 else 0
+        SerialEmitter.send(SerialEmitter.Destination.LCD, packet, 5)
         Thread.sleep(2)
     }
 
-    private fun writeNibble(rs: Boolean, data: Int) {
-        if (SERIAL_INTERFACE) writeNibbleSerial(rs, data)
-        else throw UnsupportedOperationException("Parallel interface not supported")
-    }
-
-    private fun writeByte(rs: Boolean, data: Int) {
-        writeNibble(rs, (data shr 4) and 0x0F)
-        writeNibble(rs, data and 0x0F)
+    // Send a full byte by splitting into two 4-bit operations
+    private fun sendByte(isData: Boolean, value: Int) {
+        // Send high nibble (bits 4-7)
+        sendToLCD(isData, (value shr 4) and 0x0F)
+        // Send low nibble (bits 0-3)
+        sendToLCD(isData, value and 0x0F)
         Thread.sleep(2)
     }
 
-    private fun writeCMD(cmd: Int) {
-        writeByte(false, cmd)
+    // Send a command to the LCD
+    private fun sendCommand(cmd: Int) {
+        sendByte(false, cmd)
         Thread.sleep(5)
     }
 
-    private fun writeDATA(data: Int) {
-        writeByte(true, data)
+    // Send a data byte to the LCD
+    private fun sendData(data: Int) {
+        sendByte(true, data)
         Thread.sleep(2)
     }
 
+    // Initialize the LCD display
     fun init() {
         Thread.sleep(20)
-        writeNibble(false, SET_8_BITS_2_LINES)
+        // Standard LCD initialization sequence for 4-bit mode
+        sendToLCD(false, 0x03) // 8-bit mode attempt 1
         Thread.sleep(5)
-        writeNibble(false, SET_8_BITS_2_LINES)
+        sendToLCD(false, 0x03) // 8-bit mode attempt 2
         Thread.sleep(1)
-        writeNibble(false, SET_8_BITS_2_LINES)
-        writeNibble(false, SET_4_BITS_2_LINES)
+        sendToLCD(false, 0x03) // 8-bit mode attempt 3
+        sendToLCD(false, SET_4_BIT_MODE) // Set 4-bit mode
 
-        writeCMD(LINE_FONT)
-        writeCMD(DISPLAY_OFF)
-        clear()
-        writeCMD(ENTRY_MODE_SET)
-        writeCMD(DISPLAY_ON)
+        // Configure the display
+        sendCommand(LINE_FONT_5X8)    // 2 lines, 5x8 font
+        sendCommand(0x08)             // Display off
+        clear()                       // Clear display
+        sendCommand(ENTRY_MODE)       // Entry mode set
+        sendCommand(DISPLAY_ON_CURSOR_ON)  // Display on, cursor on
         Thread.sleep(2)
     }
 
     fun clear() {
-        writeCMD(DISPLAY_CLEAR)
+        sendCommand(CLEAR_DISPLAY)
+        Thread.sleep(5) // Clear command needs extra time
     }
 
     fun write(c: Char) {
-        if (c != 0.toChar()) writeDATA(c.code)
+        if (c != 0.toChar()) sendData(c.code)
     }
 
     fun writeString(text: String) {
@@ -69,8 +68,9 @@ object LCD {
     }
 
     fun cursor(line: Int, column: Int) {
+        // Calculate address: first line starts at 0x00, second at 0x40
         val addr = if (line == 0) column else 0x40 + column
-        writeCMD(0x80 or addr)
+        sendCommand(0x80 or addr) // Set DDRAM address command
     }
 }
 

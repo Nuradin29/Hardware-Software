@@ -55,7 +55,10 @@ fun main() {
     HAL.init()
     SerialEmitter.init()
 
-    RouletteDisplay.setValue(4, 5)
+    RouletteDisplay.init()
+
+    RouletteDisplay.setValue(1,5)
+    RouletteDisplay.sendUpdateDisplay()
     RouletteDisplay.animation()
 
 }
